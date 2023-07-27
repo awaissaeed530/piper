@@ -3,7 +3,7 @@ mod modules;
 use core::panic;
 
 use actix_web::{web, App, HttpServer};
-use modules::user::user_routes;
+use modules::user::routes::user_routes;
 use sqlx::{
     sqlite::{SqlitePoolOptions, SqliteQueryResult},
     SqlitePool,
