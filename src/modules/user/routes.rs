@@ -15,7 +15,7 @@ pub fn user_routes() -> Scope {
 
 #[post("")]
 async fn save(user: web::Json<User>, state: web::Data<AppState>) -> impl Responder {
-    let res = UserQuery::save(user.into_inner(), &state.pool).await;
+    let res = UserQuery::save(&user.into_inner(), &state.pool).await;
 
     match res {
         Ok(_) => HttpResponse::NoContent(),
@@ -58,7 +58,7 @@ async fn update(
     state: web::Data<AppState>,
 ) -> impl Responder {
     let id = path.into_inner();
-    let res = UserQuery::update(id, user.into_inner(), &state.pool).await;
+    let res = UserQuery::update(id, &user.into_inner(), &state.pool).await;
 
     match res {
         Ok(_) => HttpResponse::NoContent(),

@@ -24,9 +24,9 @@ impl UserQuery {
             .await
     }
 
-    pub async fn find_by_email(email: String, pool: &SqlitePool) -> Result<User, sqlx::Error> {
+    pub async fn find_by_email(email: &str, pool: &SqlitePool) -> Result<User, sqlx::Error> {
         sqlx::query_as::<_, User>("SELECT * from users where email=$1")
-            .bind(email)
+            .bind(&email)
             .fetch_one(pool)
             .await
     }
@@ -44,17 +44,17 @@ impl UserQuery {
         }
     }
 
-    pub async fn save(user: User, pool: &SqlitePool) -> Result<SqliteQueryResult, sqlx::Error> {
+    pub async fn save(user: &User, pool: &SqlitePool) -> Result<SqliteQueryResult, sqlx::Error> {
         sqlx::query("INSERT INTO users (name, email) values ($1, $2)")
-            .bind(user.name.to_owned())
-            .bind(user.email.to_owned())
+            .bind(&user.name)
+            .bind(&user.email)
             .execute(pool)
             .await
     }
 
     pub async fn update(
         id: i32,
-        user: User,
+        user: &User,
         pool: &SqlitePool,
     ) -> Result<SqliteQueryResult, sqlx::Error> {
         sqlx::query(
@@ -63,8 +63,8 @@ impl UserQuery {
             WHERE id=$1",
         )
         .bind(id)
-        .bind(user.name.to_owned())
-        .bind(user.email.to_owned())
+        .bind(&user.name)
+        .bind(&user.email)
         .execute(pool)
         .await
     }
