@@ -1,11 +1,11 @@
 use actix_web::{delete, get, post, web, Responder, Scope};
 use actix_web::{put, HttpResponse};
 
-use super::data::{User, UserQuery};
+use super::data::{Product, ProductQuery};
 use crate::AppState;
 
-pub fn user_routes() -> Scope {
-    web::scope("/users")
+pub fn product_routes() -> Scope {
+    web::scope("/products")
         .service(save)
         .service(find_all)
         .service(find_by_id)
@@ -14,8 +14,8 @@ pub fn user_routes() -> Scope {
 }
 
 #[post("")]
-async fn save(user: web::Json<User>, state: web::Data<AppState>) -> impl Responder {
-    let res = UserQuery::save(&user.into_inner(), &state.pool).await;
+async fn save(product: web::Json<Product>, state: web::Data<AppState>) -> impl Responder {
+    let res = ProductQuery::save(&product.into_inner(), &state.pool).await;
 
     match res {
         Ok(_) => HttpResponse::NoContent(),
@@ -25,10 +25,10 @@ async fn save(user: web::Json<User>, state: web::Data<AppState>) -> impl Respond
 
 #[get("")]
 async fn find_all(state: web::Data<AppState>) -> impl Responder {
-    let res = UserQuery::find_all(&state.pool).await;
+    let res = ProductQuery::find_all(&state.pool).await;
 
     match res {
-        Ok(users) => HttpResponse::Ok().json(users),
+        Ok(products) => HttpResponse::Ok().json(products),
         Err(_) => HttpResponse::BadRequest().body(""),
     }
 }
@@ -36,13 +36,13 @@ async fn find_all(state: web::Data<AppState>) -> impl Responder {
 #[get("/{id}")]
 async fn find_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Responder {
     let id = path.into_inner();
-    let res = UserQuery::find_by_id(id, &state.pool).await;
+    let res = ProductQuery::find_by_id(id, &state.pool).await;
 
     match res {
-        Ok(user) => HttpResponse::Ok().json(user),
+        Ok(product) => HttpResponse::Ok().json(product),
         Err(err) => {
             if let sqlx::Error::RowNotFound = err {
-                return HttpResponse::NotFound().body(format!("User with id {} does not exist", id));
+                return HttpResponse::NotFound().body(format!("Product with id {} does not exist", id));
             } else {
                 return HttpResponse::BadRequest()
                     .body(format!("Unhandled error {}", err.to_string()));
@@ -54,11 +54,11 @@ async fn find_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Re
 #[put("/{id}")]
 async fn update(
     path: web::Path<i32>,
-    user: web::Json<User>,
+    product: web::Json<Product>,
     state: web::Data<AppState>,
 ) -> impl Responder {
     let id = path.into_inner();
-    let res = UserQuery::update(id, &user.into_inner(), &state.pool).await;
+    let res = ProductQuery::update(id, &product.into_inner(), &state.pool).await;
 
     match res {
         Ok(_) => HttpResponse::NoContent(),
@@ -69,7 +69,7 @@ async fn update(
 #[delete("/{id}")]
 async fn delete_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Responder {
     let id = path.into_inner();
-    let res = UserQuery::delete_by_id(id, &state.pool).await;
+    let res = ProductQuery::delete_by_id(id, &state.pool).await;
 
     match res {
         Ok(_) => HttpResponse::NoContent(),
