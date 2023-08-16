@@ -1,7 +1,7 @@
 mod modules;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
-use modules::{user::routes::user_routes, product::routes::product_routes};
+use modules::{user::routes::user_routes, product::routes::product_routes, auth::routes::auth_routes};
 use sqlx::{
     sqlite::{SqlitePoolOptions, SqliteQueryResult},
     SqlitePool,
@@ -29,7 +29,8 @@ async fn main() -> Result<(), std::io::Error> {
                     .wrap(Logger::default())
                     .app_data(state.clone())
                     .service(user_routes())
-                    .service(product_routes()))
+                    .service(product_routes())
+                    .service(auth_routes()))
         .bind(("127.0.0.1", 8080))?
         .run()
         .await
@@ -40,7 +41,9 @@ async fn setup(pool: &SqlitePool) -> Result<SqliteQueryResult, sqlx::Error> {
         "CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         name TEXT NOT NULL,
-        email TEXT NOT NULL);
+        email TEXT NOT NULL,
+        username TEXT NOT NULL,
+        password TEXT NOT NULL);
 
         CREATE TABLE products (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
