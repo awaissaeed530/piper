@@ -35,8 +35,8 @@ async fn initialize_database() -> PgPool {
     let pool = database::connect(&connection_string)
         .await
         .expect("Failed to connect to database");
-   database::setup(&pool)
+   database::migrate(&pool)
        .await
-       .expect("Failed to initialize database");
+       .expect("Failed to migrate database");
     pool
 }
