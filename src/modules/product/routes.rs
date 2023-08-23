@@ -51,9 +51,9 @@ async fn find_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Re
         Ok(product) => HttpResponse::Ok().json(product),
         Err(err) => {
             if let sqlx::Error::RowNotFound = err {
-                return HttpResponse::NotFound().json(ResponseError::from(format!("Product with id {} does not exist", id)));
+                HttpResponse::NotFound().json(ResponseError::from(format!("Product with id {} does not exist", id)))
             } else {
-                return HttpResponse::BadRequest().json(ResponseError::from(err));
+                HttpResponse::BadRequest().json(ResponseError::from(err))
             }
         }
     }

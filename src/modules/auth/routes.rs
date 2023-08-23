@@ -55,9 +55,9 @@ async fn login(dto: web::Json<LoginRequest>, state: web::Data<AppState>) -> impl
         };
         let token = encode_token(&claims);
         let response = LoginResponse { token };
-        return HttpResponse::Ok().json(response);
+        HttpResponse::Ok().json(response)
     }
     else {
-        return HttpResponse::Unauthorized().json(error);
+        HttpResponse::Unauthorized().json(error)
     }
 }
