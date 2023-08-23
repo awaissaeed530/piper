@@ -1,10 +1,9 @@
-use actix_web::{delete, get, post, web, Responder, Scope};
-use actix_web::{put, HttpResponse};
+use actix_web::{delete, get, post, put, HttpResponse, web, Responder, Scope};
 
 use super::data::{Product, ProductQuery};
 use crate::AppState;
 
-pub fn product_routes() -> Scope {
+pub fn routes() -> Scope {
     web::scope("/products")
         .service(save)
         .service(find_all)

@@ -1,9 +1,9 @@
 use actix_web::{post, web, Responder, Scope, HttpResponse};
 
-use crate::{AppState, modules::{user::data::{UserQuery, User}, auth::data::{verify_password, Claims, encode_token}}};
-use super::data::{RegisterRequest, LoginRequest, LoginResponse, hash_password};
+use crate::{AppState, modules::user::data::{UserQuery, User}};
+use super::data::{RegisterRequest, LoginRequest, LoginResponse, Claims, hash_password, verify_password, encode_token};
 
-pub fn auth_routes() -> Scope {
+pub fn routes() -> Scope {
     web::scope("/auth")
         .service(register)
         .service(login)
