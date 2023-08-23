@@ -1,5 +1,6 @@
-mod modules;
 mod database;
+mod modules;
+mod utils;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 
