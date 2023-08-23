@@ -1,7 +1,7 @@
 use actix_web::{delete, get, post, put, HttpResponse, web, Responder, Scope};
 
-use super::data::{Product, ProductQuery};
-use crate::AppState;
+use super::data::{CreateProductRequest, FindProductResponse, UpdateProductRequest};
+use crate::{AppState, utils::error::ResponseError};
 
 pub fn routes() -> Scope {
     web::scope("/products")
@@ -13,38 +13,47 @@ pub fn routes() -> Scope {
 }
 
 #[post("")]
-async fn save(product: web::Json<Product>, state: web::Data<AppState>) -> impl Responder {
-    let res = ProductQuery::save(&product.into_inner(), &state.pool).await;
+async fn save(dto: web::Json<CreateProductRequest>, state: web::Data<AppState>) -> impl Responder {
+    let dto = dto.into_inner();
+    let res = sqlx::query("INSERT INTO products (name, description) VALUES ($1, $2)")
+        .bind(&dto.name)
+        .bind(&dto.description)
+        .execute(&state.pool)
+        .await;
 
     match res {
-        Ok(_) => HttpResponse::NoContent(),
-        Err(_) => HttpResponse::BadRequest(),
+        Ok(_) => HttpResponse::NoContent().body(""),
+        Err(err) => HttpResponse::BadRequest().json(ResponseError::from(err)),
     }
 }
 
 #[get("")]
 async fn find_all(state: web::Data<AppState>) -> impl Responder {
-    let res = ProductQuery::find_all(&state.pool).await;
+    let res = sqlx::query_as::<_, FindProductResponse>("SELECT id, name, description FROM products")
+        .fetch_all(&state.pool)
+        .await;
 
     match res {
         Ok(products) => HttpResponse::Ok().json(products),
-        Err(_) => HttpResponse::BadRequest().body(""),
+        Err(err) => HttpResponse::BadRequest().json(ResponseError::from(err)),
     }
 }
 
 #[get("/{id}")]
 async fn find_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Responder {
     let id = path.into_inner();
-    let res = ProductQuery::find_by_id(id, &state.pool).await;
+    let res = sqlx::query_as::<_, FindProductResponse>("SELECT id, name, description FROM products WHERE id=$1")
+        .bind(id)
+        .fetch_one(&state.pool)
+        .await;
 
     match res {
         Ok(product) => HttpResponse::Ok().json(product),
         Err(err) => {
             if let sqlx::Error::RowNotFound = err {
-                return HttpResponse::NotFound().body(format!("Product with id {} does not exist", id));
+                return HttpResponse::NotFound().json(ResponseError::from(format!("Product with id {} does not exist", id)));
             } else {
-                return HttpResponse::BadRequest()
-                    .body(format!("Unhandled error {}", err.to_string()));
+                return HttpResponse::BadRequest().json(ResponseError::from(err));
             }
         }
     }
@@ -53,25 +62,35 @@ async fn find_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Re
 #[put("/{id}")]
 async fn update(
     path: web::Path<i32>,
-    product: web::Json<Product>,
+    dto: web::Json<UpdateProductRequest>,
     state: web::Data<AppState>,
-) -> impl Responder {
+    ) -> impl Responder {
     let id = path.into_inner();
-    let res = ProductQuery::update(id, &product.into_inner(), &state.pool).await;
+    let dto = dto.into_inner();
+
+    let res = sqlx::query("UPDATE products SET name=$2, description=$3 WHERE id=$1")
+        .bind(id)
+        .bind(&dto.name)
+        .bind(&dto.description)
+        .execute(&state.pool)
+        .await;
 
     match res {
-        Ok(_) => HttpResponse::NoContent(),
-        Err(_) => HttpResponse::BadRequest(),
+        Ok(_) => HttpResponse::NoContent().body(""),
+        Err(err) => HttpResponse::BadRequest().json(ResponseError::from(err)),
     }
 }
 
 #[delete("/{id}")]
 async fn delete_by_id(path: web::Path<i32>, state: web::Data<AppState>) -> impl Responder {
     let id = path.into_inner();
-    let res = ProductQuery::delete_by_id(id, &state.pool).await;
+    let res = sqlx::query("DELETE FROM products WHERE id=$1")
+        .bind(id)
+        .execute(&state.pool)
+        .await;
 
     match res {
-        Ok(_) => HttpResponse::NoContent(),
-        Err(_) => HttpResponse::BadRequest(),
+        Ok(_) => HttpResponse::NoContent().body(""),
+        Err(err) => HttpResponse::BadRequest().json(ResponseError::from(err)),
     }
 }
