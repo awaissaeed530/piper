@@ -1,7 +1,7 @@
 use argon2::{Argon2, password_hash::{SaltString, rand_core::OsRng}, PasswordHasher, PasswordHash, PasswordVerifier};
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
     pub name: String,
     pub email: String,
@@ -9,13 +9,13 @@ pub struct RegisterRequest {
     pub password: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct LoginResponse {
     pub token: String,
 }
