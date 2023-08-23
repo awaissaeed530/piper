@@ -1,30 +1,24 @@
 mod modules;
+mod database;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use modules::{user::routes::user_routes, product::routes::product_routes, auth::routes::auth_routes};
-use sqlx::{
-    sqlite::{SqlitePoolOptions, SqliteQueryResult},
-    SqlitePool,
-};
+use sqlx::PgPool;
 use env_logger::Env;
 
 struct AppState {
-    pool: SqlitePool,
+    pool: PgPool,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
+    dotenvy::dotenv().expect("Failed to load .env file");
 
-    let pool = SqlitePoolOptions::new()
-        .connect("sqlite::memory:")
-        .await
-        .expect("Failed to initialize db pool");
-    setup(&pool).await.expect("Failed to initialize database");
-
+    let pool = initialize_database().await;
     let state = web::Data::new(AppState { pool });
 
-    HttpServer::new(move || 
+    HttpServer::new(move ||
                     App::new()
                     .wrap(Logger::default())
                     .app_data(state.clone())
@@ -36,20 +30,13 @@ async fn main() -> Result<(), std::io::Error> {
         .await
 }
 
-async fn setup(pool: &SqlitePool) -> Result<SqliteQueryResult, sqlx::Error> {
-    sqlx::query(
-        "CREATE TABLE users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        username TEXT NOT NULL,
-        password TEXT NOT NULL);
-
-        CREATE TABLE products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT);",
-    )
-    .execute(pool)
-    .await
+async fn initialize_database() -> PgPool {
+    let connection_string = std::env::var("DATABASE_URL").expect("Connection string not provided");
+    let pool = database::connect(&connection_string)
+        .await
+        .expect("Failed to connect to database");
+   database::setup(&pool)
+       .await
+       .expect("Failed to initialize database");
+    pool
 }
